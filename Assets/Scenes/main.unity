@@ -224,11 +224,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 089e9434297460845ac63318de7a59c9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  startRegion: {fileID: 0}
+  startRegion: {fileID: 1688133763}
   sectionScale: {x: 1, y: 1, z: 1}
   generationDelay: 0
   immediateGeneration: 0
-  tileSets: []
+  tileSets:
+  - {fileID: 11400000, guid: 2b0b63eaaab3054409f1f6ba3ab9dc3b, type: 2}
 --- !u!4 &739497392
 Transform:
   m_ObjectHideFlags: 0

@@ -245,7 +245,7 @@ namespace WrldBldr
 		private Section makeRoom(Section parent, Section.AdjDirection dir, Section.Archetype type = Section.Archetype.normal)
 		{
 			//check for overlap
-			Collider2D col = Physics2D.OverlapPoint (Section.getDirection (dir, !parent.isFlipped()) + (Vector2)parent.transform.position, Physics2D.AllLayers);
+			Collider2D col = Physics2D.OverlapPoint (Section.getDirection (dir, parent.isFlipped()) + (Vector2)parent.transform.position, Physics2D.AllLayers);
 			if (col != null)
 			{
 				//found overlap, set link to overlap

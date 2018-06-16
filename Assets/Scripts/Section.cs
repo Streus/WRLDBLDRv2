@@ -39,8 +39,7 @@ namespace WrldBldr
 		{
 			GameObject sec = new GameObject (typeof (Section).Name);
 			Section s = sec.AddComponent<Section> ();
-			Bounds b = sec.AddComponent<CircleCollider2D> ().bounds;
-			b.size = new Vector3 (0.9f, 0.9f, 0f);
+			sec.AddComponent<CircleCollider2D> ().radius = 0.45f;
 
 			sec.transform.position = position;
 			sec.transform.rotation = flipped ? Quaternion.Euler(0f, 0f, 180f) : Quaternion.identity;
@@ -80,13 +79,13 @@ namespace WrldBldr
 				return new Color(0f, 0f, 0f, 0.5f);
 
 			case Archetype.start:
-				return Color.white;
+				return new Color (0f, 0.7f, 0f, 0.5f);
 
 			case Archetype.end:
-				return Color.gray;
+				return new Color (0.7f, 0f, 0f, 0.5f);
 
 			default:
-				return Color.magenta;
+				return new Color (1f, 0f, 1f, 0.5f);
 			}
 		}
 
@@ -132,15 +131,21 @@ namespace WrldBldr
 #if UNITY_EDITOR
 		public void OnDrawGizmos()
 		{
+			//solid sphere
 			if (selected)
 				Gizmos.color = Color.yellow;
 			else
 				Gizmos.color = getArchetypeColor (getArchetype ());
-			
-			Gizmos.DrawSphere (transform.position, transform.localScale.magnitude);
+			Gizmos.DrawSphere (transform.position, GetComponent<CircleCollider2D> ().radius);
 
-			Gizmos.color = set.getDebugColor ();
-			Gizmos.DrawWireSphere (transform.position, transform.localScale.magnitude);
+			//wire sphere
+			if (set != null)
+				Gizmos.color = set.getDebugColor ();
+			else
+				Gizmos.color = new Color (1f, 0f, 1f, 0.5f);
+			Gizmos.DrawWireSphere (transform.position, GetComponent<CircleCollider2D>().radius);
+
+			//connections
 			Gizmos.color = Color.white;
 			for (int i = 0; i < adjSections.Length; i++)
 			{
@@ -196,10 +201,10 @@ namespace WrldBldr
 		/// <param name="reverseConnections">Make connections from the other section to this section</param>
 		public void setAdjRoom(AdjDirection index, Section room, bool reverseConnections = true)
 		{
-			if (room.flipped == flipped)
-				throw new System.InvalidOperationException ("Cannot connect two sections with the same flipped state!\n" + this.name + ", " + room.name);
+//			if (room.flipped == flipped)
+//				throw new System.InvalidOperationException ("Cannot connect two sections with the same flipped state!\n" + this.name + ", " + room.name);
 
-				adjSections[(int)index] = room;
+			adjSections[(int)index] = room;
 
 			if (reverseConnections)
 				setAdjRoom (index, this, false);
@@ -222,7 +227,7 @@ namespace WrldBldr
 		public AdjDirection[] getFreeRooms()
 		{
 			List<AdjDirection> rooms = new List<AdjDirection> ();
-			for (int i = 0; i < adjSections.Length; i += 2)
+			for (int i = 0; i < adjSections.Length; i++)
 			{
 				if (adjSections[i] == null)
 					rooms.Add ((AdjDirection)i);
@@ -254,7 +259,7 @@ namespace WrldBldr
 			for (int i = 0; i < adjSections.Length; i++)
 			{
 				if (adjSections[i] != null)
-					mask |= 1 << (i * 2);
+					mask |= 1 << (i);
 			}
 
 			return mask;
@@ -262,7 +267,9 @@ namespace WrldBldr
 
 		public void chooseTile(TileSet set)
 		{
-			//TODO chooseTile
+			float rot;
+			GameObject tile = set.getTile (getAdjMask (), out rot);
+			Instantiate (tile, transform, false).transform.rotation = Quaternion.Euler(0f, 0f, rot);
 		}
 		#endregion
 

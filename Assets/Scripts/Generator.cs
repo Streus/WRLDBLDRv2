@@ -113,6 +113,8 @@ namespace WrldBldr
 		{
 			startRegion.generationCompleted -= endGeneration;
 			Debug.Log ("[WB] Generation Complete!");
+			if (tileSets.Length == 0)
+				throw new System.IndexOutOfRangeException ("No Tile Sets in the Generator!");
 			TileSet set = tileSets[Random.Range (0, tileSets.Length - 1)];
 			if (set == null)
 			{
