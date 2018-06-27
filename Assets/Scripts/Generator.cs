@@ -4,6 +4,9 @@ using UnityEngine;
 
 namespace WrldBldr
 {
+	/// <summary>
+	/// 
+	/// </summary>
 	public class Generator : MonoBehaviour
 	{
 		#region STATIC_VARS

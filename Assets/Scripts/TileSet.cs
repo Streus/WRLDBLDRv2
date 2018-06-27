@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// 
+/// </summary>
 [CreateAssetMenu(menuName = "WrldBldr/World Tile Set")]
 public class TileSet : ScriptableObject
 {

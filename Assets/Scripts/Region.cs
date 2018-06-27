@@ -4,6 +4,9 @@ using System.Collections;
 
 namespace WrldBldr
 {
+	/// <summary>
+	/// 
+	/// </summary>
 	public class Region : MonoBehaviour
 	{
 		#region INSTANCE_VARS

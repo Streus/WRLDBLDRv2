@@ -1,12 +1,12 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-/// <summary>
-/// Represents a physical section of a generated Region.
-/// Maintains references to all adjacent sections.
-/// </summary>
 namespace WrldBldr
 {
+	/// <summary>
+	/// Represents a physical section of a generated Region.
+	/// Maintains references to all adjacent sections.
+	/// </summary>
 	public class Section : MonoBehaviour
 	{
 		#region STATIC_VARS
@@ -131,19 +131,34 @@ namespace WrldBldr
 #if UNITY_EDITOR
 		public void OnDrawGizmos()
 		{
-			//solid sphere
+			Vector3[] triPoints = new Vector3[] {
+				new Vector3 (0f, 0.5f) + transform.position,
+				new Vector3 (-0.433f, -0.25f) + transform.position,
+				new Vector3 (0.433f, -0.25f) + transform.position };
+#if UNITY_EDITOR
+			//wire triangle
 			if (selected)
 				Gizmos.color = Color.yellow;
 			else
 				Gizmos.color = getArchetypeColor (getArchetype ());
-			Gizmos.DrawSphere (transform.position, GetComponent<CircleCollider2D> ().radius);
+			for (int i = 0; i < triPoints.Length; i++)
+			{
+				int ipo = (i + 1) % triPoints.Length;
+				Gizmos.DrawLine (triPoints[i], triPoints[ipo]);
+			}
 
-			//wire sphere
+			//solid triangle
 			if (set != null)
-				Gizmos.color = set.getDebugColor ();
+				UnityEditor.Handles.color = set.getDebugColor ();
 			else
-				Gizmos.color = new Color (1f, 0f, 1f, 0.5f);
+				UnityEditor.Handles.color = new Color (1f, 0f, 1f, 0.5f);
+
+			UnityEditor.Handles.DrawAAConvexPolygon(new Vector3[] {
+				new Vector3 (0f, 0.5f) + transform.position,
+				new Vector3 (-0.433f, -0.25f) + transform.position,
+				new Vector3 (0.433f, -0.25f) + transform.position });
 			Gizmos.DrawWireSphere (transform.position, GetComponent<CircleCollider2D>().radius);
+#endif
 
 			//connections
 			Gizmos.color = Color.white;
