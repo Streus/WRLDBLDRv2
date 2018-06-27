@@ -12,39 +12,10 @@ namespace WrldBldr
 		{
 			DrawDefaultInspector ();
 			Generator g = (Generator)target;
-
-			GUILayout.Label ("Stats", EditorStyles.boldLabel);
-
-			if (g.getStartRegion () != null)
-			{
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Section Count\n(Current/Target):");
-				GUILayout.Label (g.getStartRegion ().getFullSectionCount () + " / " + g.getStartRegion ().getFullTargetSize ());
-				GUILayout.EndHorizontal ();
-
-				GUILayout.BeginHorizontal ();
-				GUILayout.Label ("Region Count:");
-				GUILayout.Label (getRegionCount (g.getStartRegion ()).ToString ());
-				GUILayout.EndHorizontal ();
-			}
-
-			GUI.enabled = g.getStartRegion () != null;
 			if (GUILayout.Button ("Generate"))
 			{
-				g.generate ();
+				g.Generate ();
 			}
-		}
-
-		private int getRegionCount(Region r)
-		{
-			int count = 0;
-			if (r == null)
-				return count;
-			for (int i = 0; i < r.getSubRegionCount (); i++)
-			{
-				count += getRegionCount (r.getSubRegion (i));
-			}
-			return count;
 		}
 	}
 }

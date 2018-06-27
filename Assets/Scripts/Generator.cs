@@ -18,28 +18,20 @@ namespace WrldBldr
 
 		[Header("Generation Options")]
 		[SerializeField]
-		private Region startRegion;
+		private Blueprint blueprint = new Blueprint();
 
 		[SerializeField]
 		private Vector3 sectionScale = Vector3.one;
-
-		[SerializeField]
-		private float generationDelay = 0f;
-
-		[SerializeField]
-		private bool immediateGeneration = false;
 
 		[Header ("Tileset Options")]
 		[SerializeField]
 		private TileSet[] tileSets;
 
-		private GenerationStage stage;
-
 		#endregion
 
 		#region STATIC_METHODS
 
-		public static Generator getInstance()
+		public static Generator GetInstance()
 		{
 			return instance;
 		}
@@ -63,107 +55,118 @@ namespace WrldBldr
 			}
 		}
 
-		public Region getStartRegion()
-		{
-			return startRegion;
-		}
-
-		public Vector3 getSectionScale()
+		public Vector3 GetSectionScale()
 		{
 			return sectionScale;
-		}
-
-		public float getGenerationDelay()
-		{
-			return generationDelay;
-		}
-
-		public float getGenerationProgress()
-		{
-			int stages = System.Enum.GetValues (typeof (GenerationStage)).Length;
-			float regionGen = (float)startRegion.getFullSectionCount () / startRegion.getFullTargetSize ();
-			float tilePlacement = 0f;
-			return (regionGen / stages) + (tilePlacement / stages);
-		}
-
-		public string getCurrentStageText()
-		{
-			switch (stage)
-			{
-			case GenerationStage.region_gen:
-				return "Generating Regions";
-			case GenerationStage.tile_placement:
-				return "Placing Tiles";
-			}
-			return "";
 		}
 
 		/// <summary>
 		/// Create a dungeon using the current starting region
 		/// </summary>
-		public void generate()
+		public void Generate()
 		{
 #if UNITY_EDITOR
 			if (!UnityEditor.EditorApplication.isPlaying)
 				return;
 #endif
-			stage = GenerationStage.region_gen;
-			startRegion.generationCompleted += endGeneration;
-			startRegion.beginPlacement (!immediateGeneration);
-		}
-
-		private void endGeneration()
-		{
-			startRegion.generationCompleted -= endGeneration;
-			Debug.Log ("[WB] Generation Complete!");
-			if (tileSets.Length == 0)
-				throw new System.IndexOutOfRangeException ("No Tile Sets in the Generator!");
-			TileSet set = tileSets[Random.Range (0, tileSets.Length - 1)];
-			if (set == null)
-			{
-				Debug.LogError ("[WB] Null tileset in tileset array.");
-				return;
-			}
-			stage = GenerationStage.tile_placement;
-			if (!immediateGeneration)
-				StartCoroutine (placeTiles (set));
-			else
-			{
-				IEnumerator m = placeTiles (set);
-				while (m.MoveNext ()) { }
-			}
-		}
-
-		private IEnumerator placeTiles(TileSet set)
-		{
-			yield return null;
-			Debug.Log ("[WB] Placing Tiles.\nUsing " + set.name + " tile set.");
+			//compile regions into a queue
 			Queue<Region> regions = new Queue<Region> ();
-			getRegionSubregions (startRegion, regions);
+			TraverseRegionTree (blueprint.GetRegionRoot (), regions);
 
+			//create a start section
+			Section origin = Section.Create (regions.Peek (), Vector2.zero, false, Section.Archetype.start);
+			origin.gameObject.name += " 0";
+
+			//all the sections that can be generated from
+			Queue<Section> activeSections = new Queue<Section> ();
+			activeSections.Enqueue (origin);
+
+			//main Region loop
 			while (regions.Count > 0)
 			{
-				regions.Dequeue ().placeTiles (set);
-				yield return new WaitForSeconds (getGenerationDelay ());
+				Region currRegion = regions.Dequeue ();
+
+				//the section currently being processed
+				Section currSection;
+
+				//main Section loop
+				while (currRegion.GetSectionCount() < currRegion.GetTargetSize())
+				{
+					//pop off the next section
+					//if no active sections remain, return to the last room processed
+					try
+					{
+						currSection = activeSections.Dequeue ();
+					}
+					catch (System.InvalidOperationException)
+					{
+						currSection = currRegion.GetSection (currRegion.GetSectionCount () - 1);
+					}
+
+					//place a random number of rooms in the available free spaces
+					Section.AdjDirection[] prospects = currSection.GetFreeRooms ();
+					if (prospects.Length > 0)
+					{
+						int subSections = Random.Range (1, prospects.Length);
+						Shuffle (prospects, 1);
+						for (int i = 0; i < subSections; i++)
+						{
+							Section s = TryMakeSection (currRegion, currSection, prospects[i]);
+							if (s != null)
+								activeSections.Enqueue (s);
+						}
+					}
+				}
 			}
 		}
 
-		private void getRegionSubregions(Region start, Queue<Region> regions)
+		private void TraverseRegionTree(Region r, Queue<Region> q)
 		{
-			regions.Enqueue (start);
-			for (int i = 0; i < start.getSubRegionCount (); i++)
+			if (r == null)
+				return;
+
+			r.Clear ();
+			q.Enqueue (r);
+			for (int i = 0; i < r.GetSubRegionCount (); i++)
+				TraverseRegionTree (r.GetSubRegion (i), q);
+		}
+
+		private void Shuffle(Section.AdjDirection[] deck, int times)
+		{
+			for (int i = 0; i < times; i++)
 			{
-				if(start.getSubRegion(i) != null)
-					getRegionSubregions (start.getSubRegion (i), regions);
+				for (int j = 0; j < deck.Length; j++)
+				{
+					int swapIndex = (int)(Random.value * deck.Length);
+					Section.AdjDirection temp = deck[swapIndex];
+					deck[swapIndex] = deck[j];
+					deck[j] = temp;
+				}
 			}
+		}
+
+		private Section TryMakeSection(Region set, Section parent, Section.AdjDirection dir, Section.Archetype type = Section.Archetype.normal)
+		{
+			//check for overlap
+			Collider2D col = Physics2D.OverlapPoint (Section.CalcDirection (dir, parent.IsFlipped ()) + (Vector2)parent.transform.position, Physics2D.AllLayers);
+			if (col != null)
+			{
+				//found overlap, set link to overlap
+				Section r = col.GetComponent<Section> ();
+				if (r.CheckSet (set))
+					parent.SetAdjRoom (dir, r);
+				return null;
+			}
+
+			//no overlap, make a new room
+			Section child = parent.AddAdjRoom (dir);
+			child.gameObject.name += " " + set.GetSectionCount();
+			set.AddSection (child);
+			return child;
 		}
 		#endregion
 
 		#region INTERNAL_TYPES
-		private enum GenerationStage
-		{
-			region_gen, tile_placement, feature_placement
-		}
 		#endregion
 	}
 }

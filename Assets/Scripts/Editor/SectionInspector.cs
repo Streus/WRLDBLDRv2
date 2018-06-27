@@ -10,8 +10,8 @@ namespace WrldBldr
 		{
 			Section room = (Section)target;
 
-			EditorGUILayout.LabelField (room.getArchetype().ToString());
-			EditorGUILayout.LabelField (System.Convert.ToString (room.getAdjMask (), 2).PadLeft (16, '0'));
+			EditorGUILayout.LabelField (room.GetArchetype().ToString());
+			EditorGUILayout.LabelField (System.Convert.ToString (room.GetAdjMask (), 2).PadLeft (16, '0'));
 		}
 	}
 }

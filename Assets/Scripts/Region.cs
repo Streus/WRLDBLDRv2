@@ -7,276 +7,133 @@ namespace WrldBldr
 	/// <summary>
 	/// 
 	/// </summary>
-	public class Region : MonoBehaviour
+	[System.Serializable]
+	public class Region
 	{
 		#region INSTANCE_VARS
 
+		// List of all the sections that are members of this Region
 		[SerializeField]
-		private Color debugColor;
+		private Section[] sections;
 
+		// Number of sections that are currently members of this Region
 		[SerializeField]
-		private int targetSize = 30;
+		private int size;
 
-		[SerializeField]
-		private bool hasEnd = true;
-
-		// List of all the regions that branch from this region
+		// List of all the regions that branch from this Region
 		[SerializeField]
 		private Region[] subRegions;
 
-		// List of all the sections that are members of this region
-		private List<Section> sections;
-
-		// Used to track generation cycle progress
-		private bool generationDone = false;
-		public event BasicNotify generationCompleted;
+		[SerializeField]
+		private Color debugColor;
 
 		#endregion
 
 		#region INSTANCE_METHODS
 
-		public void Awake()
+		public Region(int targetSize, params Region[] regions)
 		{
-			sections = new List<Section> ();
+			sections = new Section[targetSize];
+			size = 0;
+			subRegions = regions;
+
+			debugColor = new Color (1f, 1f, 1f, 0.5f);
 		}
 
-		public int getTargetSize()
+		/// <summary>
+		/// Adds a Section to this Region. Fails if the target size has already been reached.
+		/// </summary>
+		/// <param name="s"></param>
+		/// <returns>The success of the addition</returns>
+		public bool AddSection(Section s)
 		{
-			return targetSize;
+			if (size < sections.Length)
+			{
+				sections[size] = s;
+				size++;
+				s.AssignSet (this);
+				return true;
+			}
+			return false;
 		}
 
-		public int getFullTargetSize()
+		public int GetTargetSize()
 		{
-			int fts = targetSize;
+			return sections.Length;
+		}
+
+		public int GetFullTargetSize()
+		{
+			int fts = GetTargetSize();
 			for (int i = 0; i < subRegions.Length; i++)
 			{
 				if (subRegions[i] != null)
-					fts += subRegions[i].getFullTargetSize ();
+					fts += subRegions[i].GetFullTargetSize ();
 			}
 			return fts;
 		}
 
-		public Color getDebugColor()
+		public Color GetDebugColor()
 		{
 			return debugColor;
 		}
 
-		public int getSectionCount()
+		public void SetDebugColor(Color c)
 		{
-			if(sections != null)
-				return sections.Count;
-			return 0;
+			debugColor = c;
 		}
 
-		public int getFullSectionCount()
+		public int GetSectionCount()
 		{
-			int fsc = getSectionCount ();
+			return size;
+		}
+
+		public int GetFullSectionCount()
+		{
+			int fsc = GetSectionCount ();
 			for (int i = 0; i < subRegions.Length; i++)
 			{
 				if (subRegions[i] != null)
-					fsc += subRegions[i].getFullSectionCount ();
+					fsc += subRegions[i].GetFullSectionCount ();
 			}
 			return fsc;
 		}
 
-		public Section getSection(int index)
+		public Section GetSection(int index)
 		{
 			return sections[index];
 		}
 
-		public int getSubRegionCount()
+		public int GetSubRegionCount()
 		{
 			return subRegions.Length;
 		}
 
-		public Region getSubRegion(int index)
+		public Region GetSubRegion(int index)
 		{
 			return subRegions[index];
 		}
 
-		public void clear()
+		public void Clear()
 		{
-			StopAllCoroutines ();
-
 			//destroy old map
 			if (sections != null)
 			{
-				for (int i = 0; i < sections.Count; i++)
+				for (int i = 0; i < size; i++)
 				{
 					try
 					{
-						Destroy (sections[i].gameObject);
+						Object.Destroy (sections[i].gameObject);
 					}
 					catch (MissingReferenceException) { }
 				}
-				sections.Clear ();
+				size = 0;
 			}
 
 			for (int i = 0; i < subRegions.Length; i++)
 			{
 				if(subRegions[i] != null)
-					subRegions[i].clear ();
-			}
-		}
-
-		public void beginPlacement(bool distributed = true)
-		{
-			clear ();
-
-			//start new map
-			Section start = Section.create (this, Vector2.zero, false, Section.Archetype.start);
-			start.gameObject.name += " 0";
-			sections = new List<Section> ();
-			sections.Add (start);
-			start.assignSet (this);
-
-			if (distributed)
-				StartCoroutine (placeSections (start));
-			else
-			{
-				IEnumerator m = placeSections (start, distributed);
-				while (m.MoveNext ()) { }
-			}
-		}
-
-		private IEnumerator placeSections(Section start, bool distributed = true)
-		{
-			//make the rooms
-			Queue<Section> activeRooms = new Queue<Section> ();
-			activeRooms.Enqueue (start);
-			Section curr;
-			Section prev = null;
-
-			//main placement loop
-			while (sections.Count <= targetSize)
-			{
-				//pop off the next room
-				//if no new active rooms were made, return to the last active room processed
-				try
-				{
-					curr = activeRooms.Dequeue ();
-				}
-				catch (System.InvalidOperationException)
-				{
-					curr = findFreeSection(sections.Count - 1);
-					if (curr == null)
-					{
-						throw new System.Exception("Failed to finish " + gameObject.name + ". No available space to expand!");
-					}
-				}
-
-				//set the color of the currently active room
-				//only done in distributed generation cycles
-				if (distributed)
-					curr.selected = true;
-
-				//place a random number of rooms in the available free spaces
-				Section.AdjDirection[] deck = curr.getFreeRooms ();
-				if (deck.Length > 0)
-				{
-					int subRooms = Random.Range (1, deck.Length);
-					shuffleDeck (deck, 1);
-					for (int i = 0; i < subRooms; i++)
-					{
-						Section r = makeRoom (curr, deck[i]);
-						if (r != null)
-						{
-							activeRooms.Enqueue (r);
-						}
-					}
-				}
-
-				yield return new WaitForSeconds (Generator.getInstance().getGenerationDelay());
-
-				//return the color of the active room
-				if (distributed)
-					curr.selected = false;
-
-				prev = curr;
-			}
-
-			if (subRegions.Length > 0)
-			{
-				int lastSection = sections.Count - 1;
-				//generate subregions
-				for (int i = 0; i < subRegions.Length; i++)
-				{
-					//skip null entries
-					if (subRegions[i] == null)
-						continue;
-
-					//listen to subregion's generation completion event
-					subRegions[i].generationCompleted += tryNotifyCompleted;
-
-					Section subStart = findFreeSection (ref lastSection);
-					if (subStart != null)
-					{
-						//pass off ownership of new start to subregion
-						subStart.assignSet (subRegions[i]);
-						subRegions[i].sections.Add (subStart);
-						sections.Remove (subStart);
-
-						//start generation of subregion
-						if (distributed)
-							subRegions[i].StartCoroutine (subRegions[i].placeSections (subStart));
-						else
-						{
-							IEnumerator m = subRegions[i].placeSections (subStart, distributed);
-							while (m.MoveNext ())
-							{ }
-						}
-						lastSection -= 3;
-					}
-					else
-					{
-						throw new System.Exception ("Failed to start " + gameObject.name + ". No available sections for a start!");
-					}
-				}
-			}
-			else
-			{
-				if (hasEnd)
-				{
-					//done, mark the end
-					prev.setArchtype (Section.Archetype.end);
-				}
-				generationDone = true;
-				tryNotifyCompleted ();
-			}
-		}
-
-		private Section makeRoom(Section parent, Section.AdjDirection dir, Section.Archetype type = Section.Archetype.normal)
-		{
-			//check for overlap
-			Collider2D col = Physics2D.OverlapPoint (Section.getDirection (dir, parent.isFlipped()) + (Vector2)parent.transform.position, Physics2D.AllLayers);
-			if (col != null)
-			{
-				//found overlap, set link to overlap
-				Section r = col.GetComponent<Section> ();
-				if (r.checkSet (this))
-					parent.setAdjRoom (dir, r);
-				return null;
-			}
-
-			//no overlap, make a new room
-			Section child = parent.addAdjRoom (dir);
-			child.gameObject.name += " " + sections.Count;
-			child.assignSet (this);
-			sections.Add (child);
-			return child;
-		}
-
-		private void shuffleDeck(Section.AdjDirection[] deck, int times)
-		{
-			for (int i = 0; i < times; i++)
-			{
-				for (int j = 0; j < deck.Length; j++)
-				{
-					int swapIndex = (int)(Random.value * deck.Length);
-					Section.AdjDirection temp = deck[swapIndex];
-					deck[swapIndex] = deck[j];
-					deck[j] = temp;
-				}
+					subRegions[i].Clear ();
 			}
 		}
 
@@ -285,43 +142,20 @@ namespace WrldBldr
 		/// one free adjacent space
 		/// </summary>
 		/// <returns></returns>
-		private Section findFreeSection(ref int startingIndex)
+		private Section FindFreeSection(ref int startingIndex)
 		{
 			for (; startingIndex >= 0; startingIndex--)
 			{
-				if (sections[startingIndex].hasFreeAdjSpace())
+				if (sections[startingIndex].HasFreeAdjSpace())
 				{
 					return sections[startingIndex];
 				}
 			}
 			return null;
 		}
-		private Section findFreeSection(int startingIndex)
+		private Section FindFreeSection(int startingIndex)
 		{
-			return findFreeSection (ref startingIndex);
-		}
-
-		/// <summary>
-		/// Will invoke the generationCompleted event if all subregions have finished generation
-		/// </summary>
-		private void tryNotifyCompleted()
-		{
-			if (generationCompleted != null)
-			{
-				generationCompleted ();
-			}
-		}
-
-		/// <summary>
-		/// Tell each section in this region to pick and place a tile from the given set based on their adjacency state
-		/// </summary>
-		/// <param name="set">The set to take tiles from</param>
-		public void placeTiles(TileSet set)
-		{
-			for (int i = 0; i < sections.Count; i++)
-			{
-				sections[i].chooseTile (set);
-			}
+			return FindFreeSection (ref startingIndex);
 		}
 		#endregion
 

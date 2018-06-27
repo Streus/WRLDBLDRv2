@@ -35,7 +35,7 @@ namespace WrldBldr
 		/// <param name="flipped">Whether this Section is flipped</param>
 		/// <param name="type">The type of Section to create</param>
 		/// <returns></returns>
-		public static Section create(Vector2 position, bool flipped, Archetype type = Archetype.normal)
+		public static Section Create(Vector2 position, bool flipped, Archetype type = Archetype.normal)
 		{
 			GameObject sec = new GameObject (typeof (Section).Name);
 			Section s = sec.AddComponent<Section> ();
@@ -43,9 +43,9 @@ namespace WrldBldr
 
 			sec.transform.position = position;
 			sec.transform.rotation = flipped ? Quaternion.Euler(0f, 0f, 180f) : Quaternion.identity;
-			sec.transform.localScale = Generator.getInstance ().getSectionScale ();
+			sec.transform.localScale = Generator.GetInstance ().GetSectionScale ();
 
-			s.setArchtype (type);
+			s.SetArchtype (type);
 			s.flipped = flipped;
 			return s;
 		}
@@ -58,11 +58,10 @@ namespace WrldBldr
 		/// <param name="flipped">Whether this Section is flipped</param>
 		/// <param name="type">The type of Section to create</param>
 		/// <returns></returns>
-		public static Section create(Region set, Vector2 position, bool flipped, Archetype type = Archetype.normal)
+		public static Section Create(Region set, Vector2 position, bool flipped, Archetype type = Archetype.normal)
 		{
-			Section r = create (position, flipped, type);
-			r.set = set;
-			r.transform.SetParent (set.transform, true);
+			Section r = Create (position, flipped, type);
+			set.AddSection (r);
 			return r;
 		}
 
@@ -71,7 +70,7 @@ namespace WrldBldr
 		/// </summary>
 		/// <param name="type"></param>
 		/// <returns></returns>
-		public static Color getArchetypeColor(Archetype type)
+		public static Color GetArchetypeColor(Archetype type)
 		{
 			switch (type)
 			{
@@ -93,14 +92,14 @@ namespace WrldBldr
 		/// Gets a random direction
 		/// </summary>
 		/// <returns>AdjDirection representing a cardinal direction</returns>
-		public static AdjDirection getRandomDirection()
+		public static AdjDirection GetRandomDirection()
 		{
 			int d = Random.Range (0, System.Enum.GetNames (typeof (AdjDirection)).Length - 1);
 
 			return (AdjDirection)d;
 		}
 
-		public static AdjDirection offsetDirection(AdjDirection dir, int amount)
+		public static AdjDirection CalcOffsetDirection(AdjDirection dir, int amount)
 		{
 			int max = System.Enum.GetNames (typeof (AdjDirection)).Length;
 			while (amount < 0)
@@ -108,7 +107,7 @@ namespace WrldBldr
 			return (AdjDirection)(((int)dir + amount) % max);
 		}
 
-		public static Vector2 getDirection(AdjDirection dir, bool flipped)
+		public static Vector2 CalcDirection(AdjDirection dir, bool flipped)
 		{
 			int offset = (int)dir;
 			float segments = System.Enum.GetNames (typeof (AdjDirection)).Length;
@@ -116,7 +115,7 @@ namespace WrldBldr
 			if (flipped)
 				angle = (angle + 180f) % 360f;
 			Vector2 direction = Quaternion.Euler (0f, 0f, angle) * Vector2.right;
-			direction.Scale (Generator.getInstance ().getSectionScale ());
+			direction.Scale (Generator.GetInstance ().GetSectionScale ());
 			return direction;
 		}
 		#endregion
@@ -132,15 +131,22 @@ namespace WrldBldr
 		public void OnDrawGizmos()
 		{
 			Vector3[] triPoints = new Vector3[] {
-				new Vector3 (0f, 0.5f) + transform.position,
-				new Vector3 (-0.433f, -0.25f) + transform.position,
-				new Vector3 (0.433f, -0.25f) + transform.position };
+				new Vector3 (0f, -0.5f),
+				new Vector3 (-0.433f, 0.25f),
+				new Vector3 (0.433f, 0.25f)};
+
+			for (int i = 0; i < triPoints.Length; i++)
+			{
+				if (flipped)
+					triPoints[i] *= -1;
+				triPoints[i] += transform.position;
+			}
 #if UNITY_EDITOR
 			//wire triangle
 			if (selected)
 				Gizmos.color = Color.yellow;
 			else
-				Gizmos.color = getArchetypeColor (getArchetype ());
+				Gizmos.color = GetArchetypeColor (GetArchetype ());
 			for (int i = 0; i < triPoints.Length; i++)
 			{
 				int ipo = (i + 1) % triPoints.Length;
@@ -149,15 +155,11 @@ namespace WrldBldr
 
 			//solid triangle
 			if (set != null)
-				UnityEditor.Handles.color = set.getDebugColor ();
+				UnityEditor.Handles.color = set.GetDebugColor ();
 			else
 				UnityEditor.Handles.color = new Color (1f, 0f, 1f, 0.5f);
 
-			UnityEditor.Handles.DrawAAConvexPolygon(new Vector3[] {
-				new Vector3 (0f, 0.5f) + transform.position,
-				new Vector3 (-0.433f, -0.25f) + transform.position,
-				new Vector3 (0.433f, -0.25f) + transform.position });
-			Gizmos.DrawWireSphere (transform.position, GetComponent<CircleCollider2D>().radius);
+			UnityEditor.Handles.DrawAAConvexPolygon(triPoints);
 #endif
 
 			//connections
@@ -172,15 +174,14 @@ namespace WrldBldr
 		}
 #endif
 
-		public bool isFlipped()
+		public bool IsFlipped()
 		{
 			return flipped;
 		}
 
-		public void assignSet(Region set)
+		public void AssignSet(Region set)
 		{
 			this.set = set;
-			transform.SetParent (set.transform, true);
 		}
 
 		/// <summary>
@@ -188,22 +189,22 @@ namespace WrldBldr
 		/// </summary>
 		/// <param name="set"></param>
 		/// <returns></returns>
-		public bool checkSet(Region set)
+		public bool CheckSet(Region set)
 		{
 			return this.set == set;
 		}
 
-		public Archetype getArchetype()
+		public Archetype GetArchetype()
 		{
 			return archtype;
 		}
 
-		public void setArchtype(Archetype type)
+		public void SetArchtype(Archetype type)
 		{
 			archtype = type;
 		}
 
-		public Section getAdjRoom(AdjDirection index)
+		public Section GetAdjRoom(AdjDirection index)
 		{
 			return adjSections[(int)index];
 		}
@@ -214,7 +215,7 @@ namespace WrldBldr
 		/// <param name="index">The direction relative to this section the connection is being made</param>
 		/// <param name="room">The section being connected to</param>
 		/// <param name="reverseConnections">Make connections from the other section to this section</param>
-		public void setAdjRoom(AdjDirection index, Section room, bool reverseConnections = true)
+		public void SetAdjRoom(AdjDirection index, Section room, bool reverseConnections = true)
 		{
 //			if (room.flipped == flipped)
 //				throw new System.InvalidOperationException ("Cannot connect two sections with the same flipped state!\n" + this.name + ", " + room.name);
@@ -222,7 +223,7 @@ namespace WrldBldr
 			adjSections[(int)index] = room;
 
 			if (reverseConnections)
-				setAdjRoom (index, this, false);
+				SetAdjRoom (index, this, false);
 		}
 
 		/// <summary>
@@ -231,15 +232,15 @@ namespace WrldBldr
 		/// <param name="dir"></param>
 		/// <param name="type"></param>
 		/// <returns></returns>
-		public Section addAdjRoom(AdjDirection dir, Archetype type = Archetype.normal)
+		public Section AddAdjRoom(AdjDirection dir, Archetype type = Archetype.normal)
 		{
-			Vector2 direction = getDirection (dir, flipped);
-			Section adj = create ((Vector2)transform.position + direction, !flipped, type);
-			setAdjRoom (dir, adj);
+			Vector2 direction = CalcDirection (dir, flipped);
+			Section adj = Create ((Vector2)transform.position + direction, !flipped, type);
+			SetAdjRoom (dir, adj);
 			return adj;
 		}
 
-		public AdjDirection[] getFreeRooms()
+		public AdjDirection[] GetFreeRooms()
 		{
 			List<AdjDirection> rooms = new List<AdjDirection> ();
 			for (int i = 0; i < adjSections.Length; i++)
@@ -251,24 +252,24 @@ namespace WrldBldr
 			return rooms.ToArray ();
 		}
 
-		public bool isAdjSpaceFree(AdjDirection dir)
+		public bool IsAdjSpaceFree(AdjDirection dir)
 		{
-			Vector2 d = getDirection (dir, flipped);
+			Vector2 d = CalcDirection (dir, flipped);
 			Collider2D col = Physics2D.OverlapPoint (d + (Vector2)transform.position, Physics2D.AllLayers);
 			return col == null;
 		}
 
-		public bool hasFreeAdjSpace()
+		public bool HasFreeAdjSpace()
 		{
 			for (int i = 0; i < adjSections.Length; i += 2)
 			{
-				if (isAdjSpaceFree ((AdjDirection)i))
+				if (IsAdjSpaceFree ((AdjDirection)i))
 					return true;
 			}
 			return false;
 		}
 
-		public int getAdjMask()
+		public int GetAdjMask()
 		{
 			int mask = 0;
 			for (int i = 0; i < adjSections.Length; i++)
@@ -278,13 +279,6 @@ namespace WrldBldr
 			}
 
 			return mask;
-		}
-
-		public void chooseTile(TileSet set)
-		{
-			float rot;
-			GameObject tile = set.getTile (getAdjMask (), out rot);
-			Instantiate (tile, transform, false).transform.rotation = Quaternion.Euler(0f, 0f, rot);
 		}
 		#endregion
 

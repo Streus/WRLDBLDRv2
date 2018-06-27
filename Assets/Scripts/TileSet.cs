@@ -16,10 +16,10 @@ public class TileSet : ScriptableObject
 
 	private TileSet()
 	{
-		setToDefaults ();
+		SetToDefaults ();
 	}
 
-	public void setToDefaults()
+	public void SetToDefaults()
 	{
 
 		tiles = new Tile[4];
@@ -31,19 +31,19 @@ public class TileSet : ScriptableObject
 
 	public void Reset()
 	{
-		setToDefaults ();
+		SetToDefaults ();
 	}
 
-	public GameObject getTile(int adjMask, out float rotation)
+	public GameObject GetTile(int adjMask, out float rotation)
 	{
 		rotation = 0f;
 
 		for (int i = tiles.Length - 1; i >= 0; i--)
 		{
-			int cv = tiles[i].getCheckVector ();
+			int cv = tiles[i].GetCheckVector ();
 
 			//check all orientations of the tile
-			for (int rot = 0; rot < tiles[i].getRotations(); rot++)
+			for (int rot = 0; rot < tiles[i].GetRotations(); rot++)
 			{
 				if (cv == (cv & adjMask))
 				{
@@ -52,7 +52,7 @@ public class TileSet : ScriptableObject
 				}
 
 				//rotate the check vector
-				cv = Tile.rotateCVLeft (cv, 1, 3);
+				cv = Tile.RotateCVLeft (cv, 1, 3);
 			}
 		}
 
@@ -73,7 +73,7 @@ public class TileSet : ScriptableObject
 		/// <param name="amount">The amount to rotate</param>
 		/// <param name="bitwidth">The maximum width of the returned int</param>
 		/// <returns>original rotated left by amount within bitwidth</returns>
-		public static int rotateCVLeft(int original, int amount, int bitwidth)
+		public static int RotateCVLeft(int original, int amount, int bitwidth)
 		{
 			int shifted = original << amount;
 			int overflow = original >> (bitwidth - amount);
@@ -104,12 +104,12 @@ public class TileSet : ScriptableObject
 			prefab = null;
 		}
 
-		public int getCheckVector()
+		public int GetCheckVector()
 		{
 			return checkVector;
 		}
 
-		public int getRotations()
+		public int GetRotations()
 		{
 			return rotations;
 		}
