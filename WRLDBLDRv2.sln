@@ -5,6 +5,8 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRLDBLDRv2", "WRLDBLDRv2\WRLDBLDRv2.csproj", "{CEC6B81A-3EAF-4A79-AE7D-04F5CC597F5F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WRLDBLDRv2Editor", "WRLDBLDRv2Editor\WRLDBLDRv2Editor.csproj", "{9584AD3F-C1D3-4807-9B7F-40F789F1F7FE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{CEC6B81A-3EAF-4A79-AE7D-04F5CC597F5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CEC6B81A-3EAF-4A79-AE7D-04F5CC597F5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CEC6B81A-3EAF-4A79-AE7D-04F5CC597F5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9584AD3F-C1D3-4807-9B7F-40F789F1F7FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9584AD3F-C1D3-4807-9B7F-40F789F1F7FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9584AD3F-C1D3-4807-9B7F-40F789F1F7FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9584AD3F-C1D3-4807-9B7F-40F789F1F7FE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

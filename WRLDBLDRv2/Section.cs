@@ -127,7 +127,6 @@ namespace WrldBldr
 			adjSections = new Section[System.Enum.GetNames (typeof (AdjDirection)).Length];
 		}
 
-#if UNITY_EDITOR
 		public void OnDrawGizmos()
 		{
 			Vector3[] triPoints = new Vector3[] {
@@ -141,7 +140,7 @@ namespace WrldBldr
 					triPoints[i] *= -1;
 				triPoints[i] += transform.position;
 			}
-#if UNITY_EDITOR
+
 			//wire triangle
 			if (selected)
 				Gizmos.color = Color.yellow;
@@ -153,14 +152,16 @@ namespace WrldBldr
 				Gizmos.DrawLine (triPoints[i], triPoints[ipo]);
 			}
 
-			//solid triangle
-			if (set != null)
-				UnityEditor.Handles.color = set.GetDebugColor ();
-			else
-				UnityEditor.Handles.color = new Color (1f, 0f, 1f, 0.5f);
+			if(Application.isEditor)
+			{
+				//solid triangle
+				if (set != null)
+					UnityEditor.Handles.color = set.GetDebugColor ();
+				else
+					UnityEditor.Handles.color = new Color (1f, 0f, 1f, 0.5f);
 
-			UnityEditor.Handles.DrawAAConvexPolygon(triPoints);
-#endif
+				UnityEditor.Handles.DrawAAConvexPolygon(triPoints);
+			}
 
 			//connections
 			Gizmos.color = Color.white;
@@ -172,7 +173,6 @@ namespace WrldBldr
 				Gizmos.DrawLine (transform.position, adjSections[i].transform.position);
 			}
 		}
-#endif
 
 		public bool IsFlipped()
 		{
