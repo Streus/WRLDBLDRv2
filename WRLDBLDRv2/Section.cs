@@ -75,16 +75,16 @@ namespace WrldBldr
 			switch (type)
 			{
 			case Archetype.normal:
-				return new Color(0f, 0f, 0f, 0.5f);
+				return new Color(0f, 0f, 0f, 0.25f);
 
 			case Archetype.start:
-				return new Color (0f, 0.7f, 0f, 0.5f);
+				return new Color (0f, 0.7f, 0f, 1f);
 
 			case Archetype.end:
-				return new Color (0.7f, 0f, 0f, 0.5f);
+				return new Color (0.7f, 0f, 0f, 1f);
 
 			default:
-				return new Color (1f, 0f, 1f, 0.5f);
+				return new Color (1f, 0f, 1f, 1f);
 			}
 		}
 
@@ -114,8 +114,9 @@ namespace WrldBldr
 			float angle = (offset / segments) * 360f;
 			if (flipped)
 				angle = (angle + 180f) % 360f;
+			angle = (angle + 90f) % 360f;
 			Vector2 direction = Quaternion.Euler (0f, 0f, angle) * Vector2.right;
-			direction.Scale (Generator.GetInstance ().GetSectionScale ());
+			direction.Scale (Generator.GetInstance ().GetSectionScale ()/2f);
 			return direction;
 		}
 		#endregion
@@ -136,6 +137,7 @@ namespace WrldBldr
 
 			for (int i = 0; i < triPoints.Length; i++)
 			{
+				triPoints[i].Scale (transform.localScale);
 				if (flipped)
 					triPoints[i] *= -1;
 				triPoints[i] += transform.position;

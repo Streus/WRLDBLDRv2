@@ -11,6 +11,8 @@ namespace WrldBldr
 	{
 		#region STATIC_VARS
 
+		private const string TAG = "[WB-Gen]";
+
 		private static Generator instance;
 		#endregion
 
@@ -22,6 +24,10 @@ namespace WrldBldr
 
 		[SerializeField]
 		private Vector3 sectionScale = Vector3.one;
+
+		[Tooltip("Maximum time generation will run uninterrupted before timing out")]
+		[SerializeField]
+		private long timeoutDuration = 10000;
 
 		[Header ("Tileset Options")]
 		[SerializeField]
@@ -48,9 +54,6 @@ namespace WrldBldr
 			else
 			{
 				Debug.LogWarning ("[WB] An instance of " + typeof (Generator).Name + " already exists!");
-#if UNITY_EDITOR
-				UnityEditor.EditorGUIUtility.PingObject (instance);
-#endif
 				Destroy (this);
 			}
 		}
@@ -65,14 +68,17 @@ namespace WrldBldr
 		/// </summary>
 		public void Generate()
 		{
-#if UNITY_EDITOR
-			if (!UnityEditor.EditorApplication.isPlaying)
+			if (!Application.isPlaying)
 				return;
+#if DEBUG
+			Debug.Log (TAG + " Traversing region tree");
 #endif
 			//compile regions into a queue
 			Queue<Region> regions = new Queue<Region> ();
 			TraverseRegionTree (blueprint.GetRegionRoot (), regions);
-
+#if DEBUG
+			Debug.Log (TAG + " Performing initial setup");
+#endif
 			//create a start section
 			Section origin = Section.Create (regions.Peek (), Vector2.zero, false, Section.Archetype.start);
 			origin.gameObject.name += " 0";
@@ -80,7 +86,9 @@ namespace WrldBldr
 			//all the sections that can be generated from
 			Queue<Section> activeSections = new Queue<Section> ();
 			activeSections.Enqueue (origin);
-
+#if DEBUG
+			Debug.Log (TAG + " Entering region loop");
+#endif
 			//main Region loop
 			while (regions.Count > 0)
 			{
@@ -88,7 +96,9 @@ namespace WrldBldr
 
 				//the section currently being processed
 				Section currSection;
-
+#if DEBUG
+				Debug.Log (TAG + " Entering section loop");
+#endif
 				//main Section loop
 				while (currRegion.GetSectionCount() < currRegion.GetTargetSize())
 				{
@@ -117,7 +127,14 @@ namespace WrldBldr
 						}
 					}
 				}
+#if DEBUG
+				Debug.Log (TAG + " Exiting section loop");
+#endif
 			}
+#if DEBUG
+			Debug.Log (TAG + " Exiting region loop");
+			Debug.Log (TAG + " Generation done");
+#endif
 		}
 
 		private void TraverseRegionTree(Region r, Queue<Region> q)
