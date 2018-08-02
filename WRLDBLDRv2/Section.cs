@@ -144,10 +144,7 @@ namespace WrldBldr
 			}
 
 			//wire triangle
-			if (selected)
-				Gizmos.color = Color.yellow;
-			else
-				Gizmos.color = GetArchetypeColor (GetArchetype ());
+			Gizmos.color = GetArchetypeColor (GetArchetype ());
 			for (int i = 0; i < triPoints.Length; i++)
 			{
 				int ipo = (i + 1) % triPoints.Length;
@@ -158,7 +155,12 @@ namespace WrldBldr
 			{
 				//solid triangle
 				if (set != null)
-					UnityEditor.Handles.color = set.GetDebugColor ();
+				{
+					if (selected)
+						Gizmos.color = Color.yellow;
+					else
+						UnityEditor.Handles.color = set.GetDebugColor ();
+				}
 				else
 					UnityEditor.Handles.color = new Color (1f, 0f, 1f, 0.5f);
 
@@ -166,7 +168,7 @@ namespace WrldBldr
 			}
 
 			//connections
-			Gizmos.color = Color.white;
+			Gizmos.color = Color.black;
 			for (int i = 0; i < adjSections.Length; i++)
 			{
 				if (adjSections[i] == null)
@@ -219,9 +221,6 @@ namespace WrldBldr
 		/// <param name="reverseConnections">Make connections from the other section to this section</param>
 		public void SetAdjRoom(AdjDirection index, Section room, bool reverseConnections = true)
 		{
-//			if (room.flipped == flipped)
-//				throw new System.InvalidOperationException ("Cannot connect two sections with the same flipped state!\n" + this.name + ", " + room.name);
-
 			adjSections[(int)index] = room;
 
 			if (reverseConnections)
@@ -245,7 +244,7 @@ namespace WrldBldr
 		public AdjDirection[] GetFreeRooms()
 		{
 			List<AdjDirection> rooms = new List<AdjDirection> ();
-			for (int i = 0; i < adjSections.Length; i++)
+			for (int i = 0; i < adjSections.Length; i += 2)
 			{
 				if (adjSections[i] == null)
 					rooms.Add ((AdjDirection)i);
@@ -274,7 +273,7 @@ namespace WrldBldr
 		public int GetAdjMask()
 		{
 			int mask = 0;
-			for (int i = 0; i < adjSections.Length; i++)
+			for (int i = 0; i < adjSections.Length; i += 2)
 			{
 				if (adjSections[i] != null)
 					mask |= 1 << (i);
@@ -293,7 +292,9 @@ namespace WrldBldr
 
 		public enum AdjDirection
 		{
-			right, left, down
+			up_right, up,
+			up_left, down_left,
+			down, down_right
 		}
 		#endregion
 	}

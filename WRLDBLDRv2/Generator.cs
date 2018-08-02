@@ -146,7 +146,7 @@ namespace WrldBldr
 							{
 								activeSections.Enqueue (s);
 								if (sectionPlaced != null)
-									sectionPlaced (s);
+									sectionPlaced (currSection, s);
 							}
 						}
 					}
@@ -164,6 +164,8 @@ namespace WrldBldr
 				if (regionFinish != null)
 					regionFinish (currRegion);
 			}
+			if (generationFinished != null)
+				generationFinished ();
 #if DEBUG
 			Debug.Log (TAG + " Exiting region loop");
 			Debug.Log (TAG + " Generation done");
@@ -219,7 +221,7 @@ namespace WrldBldr
 		#region INTERNAL_TYPES
 		public delegate void GenEvent();
 		public delegate void RegionEvent(Region sub);
-		public delegate void SectionEvent(Section sub);
+		public delegate void SectionEvent(Section source, Section sub);
 		#endregion
 	}
 }
