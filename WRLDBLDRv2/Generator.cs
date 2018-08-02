@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace WrldBldr
 {
@@ -25,9 +26,15 @@ namespace WrldBldr
 		[SerializeField]
 		private Vector3 sectionScale = Vector3.one;
 
-		[Tooltip("Maximum time generation will run uninterrupted before timing out")]
+		[Tooltip("Maximum time generation will run uninterrupted before yielding to other operations")]
 		[SerializeField]
-		private long timeoutDuration = 10000;
+		private long timeoutDuration = 100;
+
+		private event GenEvent prepareGeneration;
+		private event RegionEvent regionStart;
+		private event SectionEvent sectionPlaced;
+		private event RegionEvent regionFinish;
+		private event GenEvent generationFinished;
 
 		[Header ("Tileset Options")]
 		[SerializeField]
@@ -68,8 +75,16 @@ namespace WrldBldr
 		/// </summary>
 		public void Generate()
 		{
+			StartCoroutine (PerformGenerate ());
+		}
+
+		public IEnumerator PerformGenerate()
+		{
 			if (!Application.isPlaying)
-				return;
+				yield break;
+
+			if (prepareGeneration != null)
+				prepareGeneration ();
 #if DEBUG
 			Debug.Log (TAG + " Traversing region tree");
 #endif
@@ -86,6 +101,8 @@ namespace WrldBldr
 			//all the sections that can be generated from
 			Queue<Section> activeSections = new Queue<Section> ();
 			activeSections.Enqueue (origin);
+
+			long startTime = System.DateTime.Now.Millisecond;
 #if DEBUG
 			Debug.Log (TAG + " Entering region loop");
 #endif
@@ -93,6 +110,9 @@ namespace WrldBldr
 			while (regions.Count > 0)
 			{
 				Region currRegion = regions.Dequeue ();
+
+				if (regionStart != null)
+					regionStart (currRegion);
 
 				//the section currently being processed
 				Section currSection;
@@ -123,13 +143,26 @@ namespace WrldBldr
 						{
 							Section s = TryMakeSection (currRegion, currSection, prospects[i]);
 							if (s != null)
+							{
 								activeSections.Enqueue (s);
+								if (sectionPlaced != null)
+									sectionPlaced (s);
+							}
 						}
+					}
+
+					//yield if generation has been running for too long uninterrupted
+					if (System.DateTime.Now.Millisecond - startTime >= timeoutDuration)
+					{
+						yield return null;
+						startTime = System.DateTime.Now.Millisecond;
 					}
 				}
 #if DEBUG
 				Debug.Log (TAG + " Exiting section loop");
 #endif
+				if (regionFinish != null)
+					regionFinish (currRegion);
 			}
 #if DEBUG
 			Debug.Log (TAG + " Exiting region loop");
@@ -184,6 +217,9 @@ namespace WrldBldr
 		#endregion
 
 		#region INTERNAL_TYPES
+		public delegate void GenEvent();
+		public delegate void RegionEvent(Region sub);
+		public delegate void SectionEvent(Section sub);
 		#endregion
 	}
 }

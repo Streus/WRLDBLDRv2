@@ -101,9 +101,9 @@ namespace WrldBldr
 
 		public static AdjDirection CalcOffsetDirection(AdjDirection dir, int amount)
 		{
+			//normalizes negative numbers to 0-int.MazValue range
 			int max = System.Enum.GetNames (typeof (AdjDirection)).Length;
-			while (amount < 0)
-				amount += max;
+			amount += Mathf.CeilToInt(Mathf.Abs((float)amount)/max) * max;
 			return (AdjDirection)(((int)dir + amount) % max);
 		}
 
