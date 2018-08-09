@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace WrldBldr
+namespace WrldBldr.Gen
 {
 	/// <summary>
 	/// Represents a physical section of a generated Region.

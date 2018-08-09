@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace WrldBldr
+namespace WrldBldr.Gen
 {
 	/// <summary>
 	/// 

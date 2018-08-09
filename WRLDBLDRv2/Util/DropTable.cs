@@ -9,6 +9,7 @@ namespace WrldBldr.Util
 	/// Table of items sorted by their chance to drop
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
+	[Serializable]
 	public class DropTable<T> : IEnumerable<T>, ISerializable
 	{
 		#region STATIC_VARS

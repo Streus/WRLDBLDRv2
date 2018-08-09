@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections;
 
-namespace WrldBldr
+namespace WrldBldr.Gen
 {
 	/// <summary>
 	/// 

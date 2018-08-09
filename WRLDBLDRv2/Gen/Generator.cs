@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace WrldBldr
+namespace WrldBldr.Gen
 {
 	/// <summary>
 	/// 

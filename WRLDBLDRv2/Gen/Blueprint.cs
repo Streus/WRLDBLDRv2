@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace WrldBldr
+namespace WrldBldr.Gen
 {
 	/// <summary>
 	/// 
