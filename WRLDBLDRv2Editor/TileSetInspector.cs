@@ -2,45 +2,48 @@
 using UnityEditor;
 using UnityEditor.AnimatedValues;
 
-[CustomEditor(typeof(TileSet))]
-public class TileSetInspector : Editor
+namespace WrldBldr.Gen
 {
-	private AnimBool tilesFadeGroupVal;
-
-	public void OnEnable()
+	[CustomEditor (typeof (TileSet))]
+	public class TileSetInspector : Editor
 	{
-		tilesFadeGroupVal = new AnimBool (false);
-		tilesFadeGroupVal.valueChanged.AddListener (Repaint);
-	}
+		private AnimBool tilesFadeGroupVal;
 
-	public override void OnInspectorGUI()
-	{
-		TileSet set = (TileSet)target;
-		SerializedObject obj = new SerializedObject (set);
-		EditorGUILayout.LabelField ("Tiles", EditorStyles.boldLabel);
-
-		//array property
-		SerializedProperty tiles = obj.FindProperty ("tiles");
-
-		//toggle fade group
-		if (GUILayout.Button ("Edit"))
+		public void OnEnable()
 		{
-			tilesFadeGroupVal.target = !tilesFadeGroupVal.target;
+			tilesFadeGroupVal = new AnimBool (false);
+			tilesFadeGroupVal.valueChanged.AddListener (Repaint);
 		}
-		if (EditorGUILayout.BeginFadeGroup (tilesFadeGroupVal.faded))
+
+		public override void OnInspectorGUI()
 		{
-			EditorGUI.indentLevel++;
-			//start array indexes
-			for (int i = 0; i < tiles.arraySize; i++)
+			TileSet set = (TileSet)target;
+			SerializedObject obj = new SerializedObject (set);
+			EditorGUILayout.LabelField ("Tiles", EditorStyles.boldLabel);
+
+			//array property
+			SerializedProperty tiles = obj.FindProperty ("tiles");
+
+			//toggle fade group
+			if (GUILayout.Button ("Edit"))
 			{
-				SerializedProperty prop = tiles.GetArrayElementAtIndex (i);
-				EditorGUILayout.PropertyField (prop.FindPropertyRelative("prefab"), new GUIContent(prop.FindPropertyRelative ("name").stringValue));
+				tilesFadeGroupVal.target = !tilesFadeGroupVal.target;
 			}
-			EditorGUI.indentLevel--;
-		}
-		EditorGUILayout.EndFadeGroup ();
+			if (EditorGUILayout.BeginFadeGroup (tilesFadeGroupVal.faded))
+			{
+				EditorGUI.indentLevel++;
+				//start array indexes
+				for (int i = 0; i < tiles.arraySize; i++)
+				{
+					SerializedProperty prop = tiles.GetArrayElementAtIndex (i);
+					EditorGUILayout.PropertyField (prop.FindPropertyRelative ("prefab"), new GUIContent (prop.FindPropertyRelative ("name").stringValue));
+				}
+				EditorGUI.indentLevel--;
+			}
+			EditorGUILayout.EndFadeGroup ();
 
-		obj.ApplyModifiedProperties ();
-		EditorUtility.SetDirty (set);
+			obj.ApplyModifiedProperties ();
+			EditorUtility.SetDirty (set);
+		}
 	}
 }

@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace WrldBldr
+namespace WrldBldr.Gen
 {
 	[CustomEditor(typeof(Generator))]
 	public class GeneratorInspector : Editor

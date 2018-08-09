@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-namespace WrldBldr
+namespace WrldBldr.Gen
 {
 	[CustomPropertyDrawer(typeof(Blueprint))]
 	public class BlueprintPropertyDrawer : PropertyDrawer

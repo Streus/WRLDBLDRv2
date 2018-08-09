@@ -55,6 +55,7 @@
     <Compile Include="Gen\Section.cs" />
     <Compile Include="Gen\TileSet.cs" />
     <Compile Include="Util\DropTable.cs" />
+    <Compile Include="Util\DropTableAsset.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

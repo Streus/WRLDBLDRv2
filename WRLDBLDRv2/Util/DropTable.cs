@@ -10,7 +10,7 @@ namespace WrldBldr.Util
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	[Serializable]
-	public class DropTable<T> : IEnumerable<T>, ISerializable
+	public class DropTable<T> : IEnumerable<DropTable<T>.Drop>, ISerializable
 	{
 		#region STATIC_VARS
 
@@ -298,13 +298,16 @@ namespace WrldBldr.Util
 			return base.GetHashCode ();
 		}
 
-		public IEnumerator<T> GetEnumerator()
+		public IEnumerator<Drop> GetEnumerator()
 		{
 			for (Node curr = front; curr != null; curr = curr.next)
 			{
 				for (int i = 0; i < curr.values.Count; i++)
 				{
-					yield return curr.values[i];
+					Drop d = new Drop ();
+					d.dropChance = curr.DropChance;
+					d.obj = curr.values[i];
+					yield return d;
 				}
 			}
 		}
@@ -332,6 +335,13 @@ namespace WrldBldr.Util
 
 		#region INTERNAL_TYPES
 		public delegate int RandomNumberGen(int min, int max);
+
+		[Serializable]
+		public struct Drop
+		{
+			public int dropChance;
+			public T obj;
+		}
 
 		private class Node : ISerializable
 		{
