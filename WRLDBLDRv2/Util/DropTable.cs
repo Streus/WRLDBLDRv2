@@ -83,6 +83,8 @@ namespace WrldBldr.Util
 		{
 			if (dropChance < MIN_DROP_CHANCE)
 				throw new ArgumentException ("Drop chance cannot be below " + MIN_DROP_CHANCE + "\nValue: " + dropChance);
+			if (obj == null)
+				throw new ArgumentException ("Cannot add null entries");
 
 			if (front == null)
 			{
@@ -185,6 +187,19 @@ namespace WrldBldr.Util
 				}
 			}
 			return false;
+		}
+
+		public int GetDropChance(T obj)
+		{
+			for (Node curr = front; curr != null; curr = curr.next)
+			{
+				for (int i = 0; i < curr.values.Count; i++)
+				{
+					if (curr.values[i].Equals (obj))
+						return curr.DropChance;
+				}
+			}
+			return 0;
 		}
 
 		public void Clear()
